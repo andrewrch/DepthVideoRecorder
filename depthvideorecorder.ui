@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>701</width>
-    <height>480</height>
+    <width>691</width>
+    <height>549</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -26,65 +26,175 @@
      <height>480</height>
     </size>
    </property>
-   <widget class="QPushButton" name="pushButton">
-    <property name="geometry">
-     <rect>
-      <x>70</x>
-      <y>380</y>
-      <width>98</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>PushButton</string>
-    </property>
-   </widget>
    <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
       <x>20</x>
       <y>20</y>
-      <width>648</width>
-      <height>242</height>
+      <width>652</width>
+      <height>267</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QWidget" name="widget" native="true">
-       <property name="minimumSize">
-        <size>
-         <width>320</width>
-         <height>240</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>320</width>
-         <height>240</height>
-        </size>
-       </property>
-       <property name="cursor">
-        <cursorShape>ArrowCursor</cursorShape>
-       </property>
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
-       <zorder>widget_2</zorder>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>RGB Image</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCVMatWidget" name="rgbImageWidget" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>320</width>
+           <height>240</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>320</width>
+           <height>240</height>
+          </size>
+         </property>
+         <property name="cursor">
+          <cursorShape>ArrowCursor</cursorShape>
+         </property>
+         <property name="autoFillBackground">
+          <bool>false</bool>
+         </property>
+         <zorder>depthImageWidget</zorder>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QWidget" name="widget_2" native="true">
-       <property name="minimumSize">
-        <size>
-         <width>320</width>
-         <height>240</height>
-        </size>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Depth Image</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCVMatWidget" name="depthImageWidget" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>320</width>
+           <height>240</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>320</width>
+           <height>240</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>310</y>
+      <width>651</width>
+      <height>201</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Camera Parameter Filename</string>
        </property>
-       <property name="maximumSize">
-        <size>
-         <width>320</width>
-         <height>240</height>
-        </size>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLineEdit" name="rgbFileName"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>RGB Video Filename</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLineEdit" name="paramsFileName">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0" colspan="4">
+      <widget class="QPushButton" name="goButton">
+       <property name="text">
+        <string>Go!</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="3">
+      <widget class="QSpinBox" name="frameCount">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>500</number>
+       </property>
+       <property name="value">
+        <number>100</number>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Number of frames to record</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" colspan="2">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Depth Video Filename</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLineEdit" name="depthFileName">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0" colspan="4">
+      <widget class="QProgressBar" name="progressBar">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0" colspan="4">
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QPushButton" name="browseButton">
+       <property name="text">
+        <string>Browse...</string>
        </property>
       </widget>
      </item>
@@ -94,6 +204,14 @@
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QCVMatWidget</class>
+   <extends>QWidget</extends>
+   <header>qcvmatwidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
