@@ -17,7 +17,8 @@ SOURCES += main.cpp\
     qcvmatwidget.cpp
 
 HEADERS  += depthvideorecorder.h \
-    qcvmatwidget.h
+    qcvmatwidget.h \
+    videostream.h
 
 FORMS    += depthvideorecorder.ui \
     qcvmatwidget.ui

@@ -10,6 +10,10 @@ DepthVideoRecorder::DepthVideoRecorder(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // We're not recording yet.
+    recording = false;
+    framesRecorded = 0;
+
     // Set up the camera
     capture = cv::VideoCapture(CV_CAP_OPENNI);
     // If it fails throw up an error and quit
@@ -46,6 +50,10 @@ DepthVideoRecorder::DepthVideoRecorder(QWidget *parent) :
             ui->depthImageWidget, SLOT(setImage(const cv::Mat&)));
     connect(this, SIGNAL(rgbImageChanged(const cv::Mat&)),
             ui->rgbImageWidget, SLOT(setImage(const cv::Mat&)));
+    connect(this, SIGNAL(disparityImageChanged(const cv::Mat&)),
+            ui->disparityImageWidget, SLOT(setImage(const cv::Mat&)));
+    connect(this, SIGNAL(validImageChanged(const cv::Mat&)),
+            ui->validImageWidget, SLOT(setImage(const cv::Mat&)));
 
     // Connect signals to update fileNames
     connect(ui->browseButton, SIGNAL(clicked()),
@@ -68,12 +76,68 @@ DepthVideoRecorder::DepthVideoRecorder(QWidget *parent) :
 
 DepthVideoRecorder::~DepthVideoRecorder()
 {
-    delete ui;
-    delete timer;
+    if (ui)
+        delete ui;
+    if (timer)
+        delete timer;
+    if (rgbVideo)
+        delete rgbVideo;
+    if (depthVideo)
+        delete depthVideo;
+    if (disparityVideo)
+        delete disparityVideo;
+    if (validVideo)
+        delete validVideo;
 }
 
 void DepthVideoRecorder::recordVideos()
 {
+    // Try opening all videos.
+    int fourcc = 0; // CV_FOURCC('F', 'F', 'V', '1');
+    rgbVideo = new VideoWriter(rgbFileName.toStdString());
+    if (!rgbVideo->isOpened())
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error","Could not open RGB video file");
+        messageBox.setFixedSize(500,200);
+        return;
+    }
+//    depthVideo = new cv::VideoWriter(depthFileName.toStdString(), fourcc,
+//                                     depthFps, cv::Size(depthWidth, depthHeight), false);
+//    if (!depthVideo->isOpened())
+//    {
+//        QMessageBox messageBox;
+//        messageBox.critical(0,"Error","Could not open depth video file");
+//        messageBox.setFixedSize(500,200);
+//        return;
+//    }
+//    disparityVideo = new cv::VideoWriter(disparityFileName.toStdString(), fourcc,
+//                                         depthFps, cv::Size(depthWidth, depthHeight));
+//    if (!disparityVideo->isOpened())
+//    {
+//        QMessageBox messageBox;
+//        messageBox.critical(0,"Error","Could not open disparity video file");
+//        messageBox.setFixedSize(500,200);
+//        return;
+//    }
+//    validVideo = new cv::VideoWriter(validFileName.toStdString(), fourcc,
+//                                     depthFps, cv::Size(depthWidth, depthHeight));
+//    if (!validVideo->isOpened())
+//    {
+//        QMessageBox messageBox;
+//        messageBox.critical(0,"Error","Could not open valid pixels video file");
+//        messageBox.setFixedSize(500,200);
+//        return;
+//    }
+
+
+    // If all of that worked, set recording to true.
+    recording = true;
+    // Probably don't need to do this.
+    frames = ui->frameCount->value();
+
+    // Tell progress bar to wake up
+    emit progressUpdate(0);
 }
 
 /**
@@ -84,11 +148,38 @@ void DepthVideoRecorder::updateImages()
 {
     // First capture images from the camera
     capture.grab();
-//    capture.retrieve(depthImage, CV_CAP_OPENNI_DEPTH_MAP);
-    capture.retrieve(depthImage, CV_CAP_OPENNI_DISPARITY_MAP);
-    emit depthImageChanged(depthImage);
+    capture.retrieve(depthImage, CV_CAP_OPENNI_DEPTH_MAP);
+    capture.retrieve(disparityImage, CV_CAP_OPENNI_DISPARITY_MAP);
     capture.retrieve(rgbImage, CV_CAP_OPENNI_BGR_IMAGE);
+    capture.retrieve(validImage, CV_CAP_OPENNI_VALID_DEPTH_MASK);
+
+    // Emit signals to display widgets
     emit rgbImageChanged(rgbImage);
+    emit depthImageChanged(depthImage);
+    emit disparityImageChanged(disparityImage);
+    emit validImageChanged(validImage);
+
+    if (recording)
+    {
+        rgbVideo->write(rgbImage);
+        depthVideo->write(depthImage);
+//        disparityVideo << disparityImage;
+//        validVideo << validImage;
+
+        framesRecorded++;
+
+        int progress = (int) ((double) framesRecorded / frames * 100);
+        emit progressUpdate(progress);
+
+        if (framesRecorded == frames)
+        {
+            recording = false;
+            delete rgbVideo;
+            delete depthVideo;
+            delete disparityVideo;
+            delete validVideo;
+        }
+    }
 }
 
 void DepthVideoRecorder::updateFileNamesDialog()
@@ -135,22 +226,19 @@ void DepthVideoRecorder::updateFileNames(const QString& fileName)
         fileNameCopy.chop(4);
 
     // Update filenames for storage with OpenCV
-    rgbFileName    = fileNameCopy + "_rgb.avi";
-    depthFileName  = fileNameCopy + "_depth.avi";
-    paramsFileName = fileNameCopy + ".props";
+    rgbFileName    = fileNameCopy + "_rgb";
+    depthFileName  = fileNameCopy + "_depth";
+    disparityFileName = fileNameCopy + "_disp";
+    validFileName = fileNameCopy + "_valid";
+    paramsFileName = fileNameCopy + "_props";
 
     // Update the UI
     ui->rgbFileName->setText(rgbFileName);
     ui->depthFileName->setText(depthFileName);
+    ui->disparityFileName->setText(disparityFileName);
+    ui->validFileName->setText(validFileName);
     ui->paramsFileName->setText(paramsFileName);
 }
-
-
-
-
-
-
-
 
 
 

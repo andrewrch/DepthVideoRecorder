@@ -8,11 +8,11 @@ QCVMatWidget::QCVMatWidget(QWidget *parent) :
     ui->setupUi(this);
     this->parent = parent;
     bgColor = QColor::fromRgb(0xe0,0x00,0x00);
-    initializeGL();
 }
 
 QCVMatWidget::~QCVMatWidget()
 {
+    glDeleteTextures(1, &texture);
 }
 
 void QCVMatWidget::initializeGL()
@@ -21,12 +21,15 @@ void QCVMatWidget::initializeGL()
 
     glEnable(GL_TEXTURE_2D);
     glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 }
 
 void QCVMatWidget::setImage(const cv::Mat& image)
 {
+    // First make sure we're using the right GL context
+    makeCurrent();
+
+    // Now update textures
     GLenum internalFormat = GL_RGBA;
     GLenum inputType, inputColourFormat;
     switch(image.channels())
@@ -61,6 +64,8 @@ void QCVMatWidget::setImage(const cv::Mat& image)
                  inputType,
                  image.data);
 
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     // Tell the widget to redraw
     updateGL();
 }
@@ -84,6 +89,7 @@ void QCVMatWidget::paintGL()
     // Unbind the texture
     glBindTexture(GL_TEXTURE_2D, 0);
     glFlush();
+    glDisable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
 }
 
