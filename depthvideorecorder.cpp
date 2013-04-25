@@ -80,61 +80,58 @@ DepthVideoRecorder::~DepthVideoRecorder()
         delete ui;
     if (timer)
         delete timer;
-    if (rgbVideo)
-        delete rgbVideo;
-    if (depthVideo)
-        delete depthVideo;
-    if (disparityVideo)
-        delete disparityVideo;
-    if (validVideo)
-        delete validVideo;
+//    if (rgbVideo->isOpened())
+//        delete rgbVideo;
+//    if (depthVideo->isOpened())
+//        delete depthVideo;
+//    if (disparityVideo->isOpened())
+//        delete disparityVideo;
+//    if (validVideo->isOpened())
+//        delete validVideo;
 }
 
 void DepthVideoRecorder::recordVideos()
 {
     // Try opening all videos.
-    int fourcc = 0; // CV_FOURCC('F', 'F', 'V', '1');
-    rgbVideo = new VideoWriter(rgbFileName.toStdString());
-    if (!rgbVideo->isOpened())
+    rgbVideo.open(rgbFileName.toStdString());
+    if (!rgbVideo.isOpened())
     {
         QMessageBox messageBox;
         messageBox.critical(0,"Error","Could not open RGB video file");
         messageBox.setFixedSize(500,200);
         return;
     }
-//    depthVideo = new cv::VideoWriter(depthFileName.toStdString(), fourcc,
-//                                     depthFps, cv::Size(depthWidth, depthHeight), false);
-//    if (!depthVideo->isOpened())
-//    {
-//        QMessageBox messageBox;
-//        messageBox.critical(0,"Error","Could not open depth video file");
-//        messageBox.setFixedSize(500,200);
-//        return;
-//    }
-//    disparityVideo = new cv::VideoWriter(disparityFileName.toStdString(), fourcc,
-//                                         depthFps, cv::Size(depthWidth, depthHeight));
-//    if (!disparityVideo->isOpened())
-//    {
-//        QMessageBox messageBox;
-//        messageBox.critical(0,"Error","Could not open disparity video file");
-//        messageBox.setFixedSize(500,200);
-//        return;
-//    }
-//    validVideo = new cv::VideoWriter(validFileName.toStdString(), fourcc,
-//                                     depthFps, cv::Size(depthWidth, depthHeight));
-//    if (!validVideo->isOpened())
-//    {
-//        QMessageBox messageBox;
-//        messageBox.critical(0,"Error","Could not open valid pixels video file");
-//        messageBox.setFixedSize(500,200);
-//        return;
-//    }
-
+    depthVideo.open(depthFileName.toStdString());
+    if (!depthVideo.isOpened())
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error","Could not open depth video file");
+        messageBox.setFixedSize(500,200);
+        return;
+    }
+    disparityVideo.open(disparityFileName.toStdString());
+    if (!disparityVideo.isOpened())
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error","Could not open disparity video file");
+        messageBox.setFixedSize(500,200);
+        return;
+    }
+    validVideo.open(validFileName.toStdString());
+    if (!validVideo.isOpened())
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error","Could not open valid pixels video file");
+        messageBox.setFixedSize(500,200);
+        return;
+    }
 
     // If all of that worked, set recording to true.
     recording = true;
     // Probably don't need to do this.
     frames = ui->frameCount->value();
+    // Don't let anyone click button
+    ui->goButton->setEnabled(false);
 
     // Tell progress bar to wake up
     emit progressUpdate(0);
@@ -161,10 +158,10 @@ void DepthVideoRecorder::updateImages()
 
     if (recording)
     {
-        rgbVideo->write(rgbImage);
-        depthVideo->write(depthImage);
-//        disparityVideo << disparityImage;
-//        validVideo << validImage;
+        rgbVideo << rgbImage;
+        depthVideo << depthImage;
+        disparityVideo << disparityImage;
+        validVideo << validImage;
 
         framesRecorded++;
 
@@ -173,11 +170,17 @@ void DepthVideoRecorder::updateImages()
 
         if (framesRecorded == frames)
         {
+            QMessageBox messageBox;
+            messageBox.information(this,"Success","All files recorded successfully");
+            messageBox.setFixedSize(500,200);
+
             recording = false;
-            delete rgbVideo;
-            delete depthVideo;
-            delete disparityVideo;
-            delete validVideo;
+//            delete rgbVideo;
+//            delete depthVideo;
+//            delete disparityVideo;
+//            delete validVideo;
+            emit progressUpdate(0);
+            ui->goButton->setEnabled(true);
         }
     }
 }
@@ -189,7 +192,7 @@ void DepthVideoRecorder::updateFileNamesDialog()
     QString fileName = QFileDialog::getSaveFileName(this,
                                 tr("Save RGB Video"),
                                 ui->rgbFileName->text(),
-                                tr("AVI Files (*.avi)"),
+                                tr("All Files (*)"),
                                 &selectedFilter,
                                 options);
 
@@ -220,17 +223,15 @@ void DepthVideoRecorder::updateFileNames(const QString& fileName)
     QString fileNameCopy(fileName);
 
     // Remove any filename suffixes and other rubbish
-    if (fileNameCopy.endsWith("_rgb.avi"))
-        fileNameCopy.chop(8);
-    else if (fileNameCopy.endsWith(".avi"))
+    if (fileNameCopy.endsWith("_rgb"))
         fileNameCopy.chop(4);
 
     // Update filenames for storage with OpenCV
-    rgbFileName    = fileNameCopy + "_rgb";
-    depthFileName  = fileNameCopy + "_depth";
+    rgbFileName       = fileNameCopy + "_rgb";
+    depthFileName     = fileNameCopy + "_depth";
     disparityFileName = fileNameCopy + "_disp";
-    validFileName = fileNameCopy + "_valid";
-    paramsFileName = fileNameCopy + "_props";
+    validFileName     = fileNameCopy + "_valid";
+    paramsFileName    = fileNameCopy + "_props";
 
     // Update the UI
     ui->rgbFileName->setText(rgbFileName);

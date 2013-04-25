@@ -3,7 +3,6 @@
 
 #include <string>
 #include <fstream>
-#include <iostream>
 #include <opencv2/opencv.hpp>
 
 #include <QDebug>
@@ -11,16 +10,34 @@
 class VideoWriter
 {
 public:
-    VideoWriter(std::string fileName)
+    VideoWriter() : firstFrame(true)
+    {}
+
+    VideoWriter(std::string fileName) : firstFrame(true)
     {
-       qDebug() << fileName.c_str();
-       theVideo.open(fileName.c_str(), std::ios::out | std::ios::binary);
-       firstFrame = true;
+        open(fileName);
     }
 
-    ~VideoWriter() {}
+    VideoWriter& operator<< (const cv::Mat& frame)
+    {
+        write(frame);
+        return *this;
+    }
 
-    bool isOpened() { return !theVideo; }
+    ~VideoWriter()
+    {
+    }
+
+    void open(std::string fileName)
+    {
+        using std::ios;
+        if (theVideo.is_open())
+            theVideo.close();
+
+        theVideo.open(fileName.c_str(), ios::out | ios::binary);
+    }
+
+    bool isOpened() { return theVideo.is_open() && !theVideo.fail(); }
 
     void write(const cv::Mat& frame)
     {
@@ -29,26 +46,27 @@ public:
         {
             frameType = frame.type();
             frameChannels = frame.channels();
-            frameDepth = frame.depth();
+            frameElemSize = frame.elemSize();
             frameHeight = frame.rows;
             frameWidth = frame.cols;
-            frameSize = frameChannels * frameDepth * frameWidth * frameHeight;
-            theVideo.write(reinterpret_cast<char*>(frameType), sizeof(int));
-            theVideo.write(reinterpret_cast<char*>(frameChannels), sizeof(int));
-            theVideo.write(reinterpret_cast<char*>(frameDepth), sizeof(int));
-            theVideo.write(reinterpret_cast<char*>(frameHeight), sizeof(int));
-            theVideo.write(reinterpret_cast<char*>(frameWidth), sizeof(int));
-            theVideo.write(reinterpret_cast<char*>(frameSize), sizeof(int));
+            frameSize = frameElemSize * frameWidth * frameHeight;
+
+            theVideo.write(reinterpret_cast<const char*>(&frameType), sizeof(frameType));
+            theVideo.write(reinterpret_cast<const char*>(&frameChannels), sizeof(frameChannels));
+            theVideo.write(reinterpret_cast<const char*>(&frameElemSize), sizeof(frameElemSize));
+            theVideo.write(reinterpret_cast<const char*>(&frameHeight), sizeof(frameHeight));
+            theVideo.write(reinterpret_cast<const char*>(&frameWidth), sizeof(frameWidth));
+            theVideo.write(reinterpret_cast<const char*>(&frameSize), sizeof(frameSize));
             firstFrame = false;
         }
 
-        theVideo.write(reinterpret_cast<char*>(frame.data), frameSize);
+        theVideo.write(reinterpret_cast<const char*>(frame.data), frameSize);
     }
 
 private:
-    std::ofstream theVideo;
+    std::fstream theVideo;
     bool firstFrame;
-    int frameType, frameChannels, frameDepth, frameWidth, frameHeight, frameSize;
+    int frameType, frameChannels, frameElemSize, frameWidth, frameHeight, frameSize;
 };
 
 
@@ -61,7 +79,7 @@ public:
        // Get all info from start of file
        theVideo->read(reinterpret_cast<char*>(frameType), sizeof(int));
        theVideo->read(reinterpret_cast<char*>(frameChannels), sizeof(int));
-       theVideo->read(reinterpret_cast<char*>(frameDepth), sizeof(int));
+       theVideo->read(reinterpret_cast<char*>(frameElemSize), sizeof(int));
        theVideo->read(reinterpret_cast<char*>(frameHeight), sizeof(int));
        theVideo->read(reinterpret_cast<char*>(frameWidth), sizeof(int));
        theVideo->read(reinterpret_cast<char*>(frameSize), sizeof(int));
@@ -86,7 +104,7 @@ private:
     std::ifstream* theVideo;
     char* buffer;
     int cvType;
-    int frameType, frameChannels, frameDepth, frameWidth, frameHeight, frameSize;
+    int frameType, frameChannels, frameElemSize, frameWidth, frameHeight, frameSize;
 };
 
 #endif // VIDEOSTREAM_H

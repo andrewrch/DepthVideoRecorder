@@ -49,8 +49,7 @@ private:
     // To hold the current RGB and depth images
     cv::Mat rgbImage, depthImage, disparityImage, validImage;
     // To hold store the videos
-    //cv::VideoWriter *rgbVideo, *depthVideo, *disparityVideo, *validVideo;
-    VideoWriter *rgbVideo, *depthVideo, *disparityVideo, *validVideo;
+    VideoWriter rgbVideo, depthVideo, disparityVideo, validVideo;
 
     // Has the "Go" button been pressed?
     bool recording;
